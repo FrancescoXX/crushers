@@ -1,16 +1,14 @@
 extends CharacterBody3D
 
 ## Crushers - WoW Classic style controller + Basic Combat
-## Hold RMB = steer with mouse | Left Click = target | Tab = cycle targets | Auto-attack + Ability 1
+## Hold LMB = look around + turn character | Left Click = target | Tab = cycle targets | Charge (1)
 
 @export_group("Movement")
 @export var walk_speed: float = 7.0
 @export var acceleration: float = 24.0
 @export var deceleration: float = 28.0
 @export var jump_velocity: float = 17.0  # A bit higher jump force
-@export var turn_speed: float = 14.0
-# turn_speed_free_mouse was removed - we no longer auto-rotate the body when mouse is free
-# to prevent UI flickering. Character now strafes in free-mouse mode.
+@export var turn_speed: float = 4.5
 @export var autorun: bool = false
 
 @export_group("Camera")
@@ -21,9 +19,11 @@ extends CharacterBody3D
 @export var camera_zoom_speed: float = 0.85
 
 @export_group("Combat")
+@export var base_damage: float = 20.0
+@export var crit_chance: float = 0.25
+@export var crit_multiplier: float = 2.0
 @export var auto_attack_range: float = 4.5
 @export var auto_attack_cooldown: float = 2.1
-@export var ability_1_damage: float = 18.0
 @export var ability_1_cooldown: float = 6.5
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
@@ -36,6 +36,11 @@ var right_mouse_held: bool = false
 var current_target: Node3D = null
 var auto_attack_timer: float = 0.0
 var ability_1_timer: float = 0.0
+
+var is_charging: bool = false
+var charge_target: Node3D = null
+@export var charge_max_range: float = 18.0
+@export var charge_speed: float = 28.0
 
 signal target_changed(new_target: Node3D)
 
@@ -81,7 +86,8 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# === Right Mouse Button (WoW steering) ===
+	# === Right Mouse Button (WoW Classic style) ===
+	# Hold Right Mouse Button to look around and turn your character
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		right_mouse_held = event.pressed
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if right_mouse_held else Input.MOUSE_MODE_VISIBLE
@@ -112,7 +118,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Only rotate camera when holding Right Mouse Button (WoW Classic style)
+	# Only rotate camera + turn character when holding Right Mouse Button (WoW Classic)
 	if event is InputEventMouseMotion and right_mouse_held:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		spring_arm.rotate_x(-event.relative.y * mouse_sensitivity)
@@ -128,21 +134,46 @@ func _physics_process(delta: float) -> void:
 	# Jump
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
-	
+
+	# === Charge Movement (Warrior Charge) ===
+	if is_charging:
+		if not charge_target or not is_instance_valid(charge_target):
+			is_charging = false
+			charge_target = null
+			return
+		
+		var target_pos = charge_target.global_position
+		var distance = global_position.distance_to(target_pos)
+		
+		# Stop cleanly when reaching the target
+		if distance < 2.5:
+			is_charging = false
+			charge_target = null
+			velocity = Vector3.ZERO
+			play_simple_attack_animation()
+			# Small damage on arrival
+			if charge_target and charge_target.has_method("take_damage"):
+				charge_target.take_damage(12)
+			return
+		
+		# Move quickly toward the target
+		var direction = (target_pos - global_position).normalized()
+		velocity = direction * charge_speed
+		move_and_slide()
+		return  # Skip normal movement while charging
+
 	# Movement
-	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var turn_input := Input.get_axis("move_left", "move_right")
+	if turn_input != 0.0:
+		rotate_y(-turn_input * turn_speed * delta)
+	
+	var move_input := Input.get_axis("move_forward", "move_back")
 	
 	# Autorun (WoW style)
-	if autorun and input_dir.y >= 0:
-		input_dir.y = -1   # force forward
+	if autorun and move_input >= 0:
+		move_input = -1.0   # force forward
 	
-	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	
-	# No auto body turning when mouse is free (RMB not held).
-	# This prevents constant camera rotation that was causing UI flickering.
-	# Character will now strafe when using WASD without holding RMB.
-	#
-	# When holding RMB, the body is rotated directly via mouse input in _unhandled_input.
+	var direction := (transform.basis * Vector3(0, 0, move_input)).normalized()
 	
 	# Apply velocity
 	var target_velocity := direction * walk_speed if direction else Vector3.ZERO
@@ -181,33 +212,43 @@ func _perform_auto_attack() -> void:
 		clear_target()
 		return
 	
-	var bug := current_target as CorruptedBug
-	if bug:
-		var damage := 8.0 + randf_range(-1.5, 1.5)
-		bug.take_damage(damage)
+	if current_target.has_method("take_damage"):
+		var damage := base_damage
+		if randf() < crit_chance:
+			damage *= crit_multiplier
+			print("Critical hit for ", damage, " damage!")
+		current_target.take_damage(damage)
 		play_simple_attack_animation()
 		auto_attack_timer = auto_attack_cooldown
 
 
 func _use_ability_1() -> void:
-	if ability_1_timer > 0 or not current_target or not is_instance_valid(current_target):
+	# Charge ability (Warrior style)
+	if is_charging or ability_1_timer > 0:
 		return
 	
-	var dist := global_position.distance_to(current_target.global_position)
-	if dist > auto_attack_range * 1.3:
+	if not current_target or not is_instance_valid(current_target):
 		return
 	
-	var bug := current_target as CorruptedBug
-	if bug:
-		bug.take_damage(ability_1_damage)
-		play_simple_attack_animation()
-		ability_1_timer = ability_1_cooldown
-		print("Used Ability 1 for ", ability_1_damage, " damage!")
+	var distance = global_position.distance_to(current_target.global_position)
+	if distance > charge_max_range:
+		return
+	
+	# Start charging
+	charge_target = current_target
+	is_charging = true
+	ability_1_timer = ability_1_cooldown
+	print("Charging...")
 
 func get_ability_1_cooldown_percent() -> float:
 	if ability_1_cooldown <= 0:
 		return 0.0
 	return clamp(ability_1_timer / ability_1_cooldown, 0.0, 1.0)
+
+func is_charge_in_range() -> bool:
+	if not current_target or not is_instance_valid(current_target):
+		return false
+	return global_position.distance_to(current_target.global_position) <= charge_max_range
 
 
 # === Experience System ===
@@ -234,12 +275,76 @@ func level_up_player() -> void:
 	xp_changed.emit(xp, xp_to_next_level)
 	
 	print("Level Up! You are now Level %d" % level)
+	_play_level_up_effect()
 	
 	# Restore some health/mana on level up (nice QoL)
 	current_health = max_health
 	current_resource = max_resource
 	health_changed.emit(current_health, max_health)
 	resource_changed.emit(current_resource, max_resource, resource_name)
+
+
+func _play_level_up_effect() -> void:
+	var effect_root := Node3D.new()
+	effect_root.name = "LevelUpEffect"
+	effect_root.global_position = global_position
+	get_tree().current_scene.add_child(effect_root)
+	
+	var flash := OmniLight3D.new()
+	flash.name = "LevelUpFlash"
+	flash.position = Vector3(0, 2.2, 0)
+	flash.light_color = Color(1.0, 0.82, 0.28, 1.0)
+	flash.light_energy = 4.5
+	flash.omni_range = 7.0
+	effect_root.add_child(flash)
+	
+	var label := Label3D.new()
+	label.text = "LEVEL UP!"
+	label.position = Vector3(0, 3.2, 0)
+	label.font_size = 48
+	label.modulate = Color(1.0, 0.86, 0.22, 1.0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	effect_root.add_child(label)
+	
+	for i in range(3):
+		_create_level_up_ring(effect_root, i)
+	
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(flash, "light_energy", 0.0, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "position:y", 4.25, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.45).set_delay(0.7)
+	tween.finished.connect(effect_root.queue_free)
+
+
+func _create_level_up_ring(parent: Node3D, index: int) -> void:
+	var ring := MeshInstance3D.new()
+	ring.name = "LevelUpRing%d" % index
+	ring.rotation_degrees.x = 90.0
+	ring.position.y = 0.18 + index * 0.75
+	ring.scale = Vector3(0.2, 0.2, 0.2)
+	
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = 0.92
+	mesh.outer_radius = 1.0
+	ring.mesh = mesh
+	
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.82, 0.18, 0.82)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.78, 0.2, 1.0)
+	mat.emission_energy_multiplier = 2.8
+	ring.material_override = mat
+	parent.add_child(ring)
+	
+	var delay := index * 0.16
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(ring, "scale", Vector3(2.6, 2.6, 2.6), 0.82).set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ring, "position:y", ring.position.y + 1.2, 0.82).set_delay(delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(mat, "albedo_color", Color(1.0, 0.82, 0.18, 0.0), 0.35).set_delay(delay + 0.42)
 
 
 func _try_target_under_mouse() -> void:
@@ -402,7 +507,7 @@ func play_simple_attack_animation() -> void:
 func _spawn_floating_text(amount: float) -> void:
 	var text_scene := preload("res://scenes/ui/FloatingCombatText.tscn")
 	var text_instance := text_scene.instantiate() as Node3D
-	text_instance.position = Vector3(global_position.x, global_position.y + 2.3, global_position.z)
+	text_instance.position = Vector3(global_position.x, global_position.y + 2.5, global_position.z)
 	get_tree().current_scene.add_child(text_instance)
 	
 	if text_instance.has_method("setup"):

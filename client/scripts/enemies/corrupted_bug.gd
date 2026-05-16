@@ -222,23 +222,16 @@ func die() -> void:
 	if player and player.has_method("gain_xp"):
 		player.gain_xp(1)
 	
-	if mesh_instance:
-		mesh_instance.visible = false
-	if head:
-		head.visible = false
-	if core:
-		core.visible = false
-	if light:
-		light.visible = false
+	remove_from_group("enemies")
 	
-	await get_tree().create_timer(0.12).timeout
 	queue_free()
+	
 
 
 func _spawn_floating_text(amount: float) -> void:
 	var text_scene := preload("res://scenes/ui/FloatingCombatText.tscn")
 	var text_instance := text_scene.instantiate() as Node3D
-	text_instance.position = Vector3(global_position.x, global_position.y + 2.1, global_position.z)
+	text_instance.position = Vector3(global_position.x, global_position.y + 2.4, global_position.z)
 	get_tree().current_scene.add_child(text_instance)
 	
 	if text_instance.has_method("setup"):
