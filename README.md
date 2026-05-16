@@ -1,5 +1,8 @@
 # Crushers
 
+<img width="664" height="387" alt="image" src="https://github.com/user-attachments/assets/a2bedc1e-c7bf-4f5d-81b4-7d276619d0d6" />
+
+
 **A dev-themed 3D MMORPG proof of concept** — programming languages as character classes in a corrupted digital underworld.
 
 > "Crush the bugs. Refactor the realm. Rise through the stack."
