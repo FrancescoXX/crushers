@@ -15,8 +15,8 @@ func setup(value: float, is_heal: bool = false) -> void:
 	var tween := create_tween()
 	tween.set_parallel(true)
 	
-	# Move upward
-	tween.tween_property(self, "position:y", position.y + 1.8, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# Move upward (increased for bigger text)
+	tween.tween_property(self, "position:y", position.y + 2.5, 0.95).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	
 	# Fade out
 	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_delay(0.35)
