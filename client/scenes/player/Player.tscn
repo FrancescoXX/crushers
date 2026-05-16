@@ -1,14 +1,39 @@
-[gd_scene load_steps=4 format=3 uid="uid://player001crushers"]
+[gd_scene load_steps=9 format=3 uid="uid://player001crushers"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player_script"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_001"]
-radius = 0.45
-height = 1.9
+radius = 0.48
+height = 1.95
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_001"]
-radius = 0.45
-height = 1.9
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Body"]
+radius = 0.5
+height = 1.3
+
+[sub_resource type="SphereMesh" id="SphereMesh_Head"]
+radius = 0.38
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Arm"]
+radius = 0.18
+height = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_Body"]
+albedo_color = Color(0.08, 0.08, 0.12, 1)
+emission_enabled = true
+emission = Color(0.1, 0.4, 0.5, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_Head"]
+albedo_color = Color(0.15, 0.1, 0.2, 1)
+emission_enabled = true
+emission = Color(0.6, 0.2, 0.7, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Arm"]
+albedo_color = Color(0.1, 0.1, 0.15, 1)
+emission_enabled = true
+emission = Color(0.15, 0.7, 0.6, 1)
+emission_energy_multiplier = 0.4
 
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 1
@@ -18,14 +43,33 @@ script = ExtResource("1_player_script")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_001")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("CapsuleMesh_001")
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("CapsuleMesh_Body")
+material_override = SubResource("Material_Body")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
+mesh = SubResource("SphereMesh_Head")
+material_override = SubResource("Material_Head")
+
+[node name="LeftArm" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.3, 0, 0, 0, -0.4, 0.9, 0, -0.9, -0.4, -0.65, 1.0, 0)
+mesh = SubResource("CapsuleMesh_Arm")
+material_override = SubResource("Material_Arm")
+
+[node name="RightArm" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.3, 0, 0, 0, -0.4, -0.9, 0, 0.9, -0.4, 0.65, 1.0, 0)
+mesh = SubResource("CapsuleMesh_Arm")
+material_override = SubResource("Material_Arm")
 
 [node name="SpringArm3D" type="SpringArm3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
 collision_mask = 1
-spring_length = 5.0
-margin = 0.45
+spring_length = 6.8
+margin = 0.6
 
 [node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)

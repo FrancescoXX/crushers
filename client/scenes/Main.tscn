@@ -3,6 +3,9 @@
 [ext_resource type="PackedScene" uid="uid://player001crushers" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://corruptedbug001" path="res://scenes/enemies/CorruptedBug.tscn" id="1_bug"]
 [ext_resource type="PackedScene" uid="uid://targetframe001" path="res://scenes/ui/TargetFrame.tscn" id="2_targetframe"]
+[ext_resource type="PackedScene" uid="uid://playerframe001" path="res://scenes/ui/PlayerFrame.tscn" id="3_playerframe"]
+[ext_resource type="PackedScene" uid="uid://actionbar001" path="res://scenes/ui/ActionBar.tscn" id="4_actionbar"]
+
 [ext_resource type="Script" path="res://scripts/main.gd" id="3_main"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial_001"]
@@ -106,3 +109,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.8, -5)
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="TargetFrame" parent="CanvasLayer" instance=ExtResource("2_targetframe")]
+
+[node name="PlayerFrame" parent="CanvasLayer" instance=ExtResource("3_playerframe")]
+
+[node name="ActionBar" parent="CanvasLayer" instance=ExtResource("4_actionbar")]
+
+

@@ -7,16 +7,18 @@ extends CharacterBody3D
 @export var walk_speed: float = 7.0
 @export var acceleration: float = 24.0
 @export var deceleration: float = 28.0
-@export var jump_velocity: float = 9.0
+@export var jump_velocity: float = 11.5  # Adjusted for higher gravity (more grounded feel)
 @export var turn_speed: float = 14.0
+# turn_speed_free_mouse was removed - we no longer auto-rotate the body when mouse is free
+# to prevent UI flickering. Character now strafes in free-mouse mode.
 @export var autorun: bool = false
 
 @export_group("Camera")
 @export var mouse_sensitivity: float = 0.003
 @export var vertical_look_limit: float = 70.0
-@export var camera_distance_min: float = 2.5
-@export var camera_distance_max: float = 9.0
-@export var camera_zoom_speed: float = 0.8
+@export var camera_distance_min: float = 3.0
+@export var camera_distance_max: float = 11.0
+@export var camera_zoom_speed: float = 0.85
 
 @export_group("Combat")
 @export var auto_attack_range: float = 4.5
@@ -25,6 +27,7 @@ extends CharacterBody3D
 @export var ability_1_cooldown: float = 6.5
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
+@onready var right_arm: MeshInstance3D = $Visual/RightArm
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var right_mouse_held: bool = false
@@ -37,9 +40,36 @@ var ability_1_timer: float = 0.0
 signal target_changed(new_target: Node3D)
 
 
+# === Player Stats (WoW Classic style) ===
+@export_group("Stats")
+@export var max_health: float = 120.0
+@export var max_resource: float = 100.0
+@export var resource_name: String = "Mana"   # Can become "Rage", "Energy", "Focus" later
+
+var current_health: float = max_health
+var current_resource: float = max_resource
+
+var mana_regen_lock_timer: float = 0.0          # 5-second rule like WoW Classic
+const MANA_REGEN_LOCK_DURATION: float = 5.0
+
+signal health_changed(current: float, maximum: float)
+signal resource_changed(current: float, maximum: float, resource_name: String)
+
+
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	spring_arm.spring_length = 5.2
+	spring_arm.spring_length = 6.8
+	
+	add_to_group("player")
+	
+	# Initialize health and resource (WoW style)
+	current_health = max_health
+	current_resource = max_resource
+	health_changed.emit(current_health, max_health)
+	resource_changed.emit(current_resource, max_resource, resource_name)
+	
+	# Make gravity feel more realistic and grounded (default is too floaty)
+	ProjectSettings.set_setting("physics/3d/default_gravity", 24.0)
 
 
 func _input(event: InputEvent) -> void:
@@ -74,12 +104,10 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion:
-		if right_mouse_held:
-			rotate_y(-event.relative.x * mouse_sensitivity)
-			spring_arm.rotate_x(-event.relative.y * mouse_sensitivity)
-		else:
-			spring_arm.rotate_x(-event.relative.y * mouse_sensitivity)
+	# Only rotate camera when holding Right Mouse Button (WoW Classic style)
+	if event is InputEventMouseMotion and right_mouse_held:
+		rotate_y(-event.relative.x * mouse_sensitivity)
+		spring_arm.rotate_x(-event.relative.y * mouse_sensitivity)
 		
 		spring_arm.rotation_degrees.x = clamp(spring_arm.rotation_degrees.x, -vertical_look_limit, vertical_look_limit)
 
@@ -102,10 +130,11 @@ func _physics_process(delta: float) -> void:
 	
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	
-	# Turning behavior
-	if not right_mouse_held and direction.length() > 0.1:
-		var target_angle := atan2(direction.x, direction.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, turn_speed * delta)
+	# No auto body turning when mouse is free (RMB not held).
+	# This prevents constant camera rotation that was causing UI flickering.
+	# Character will now strafe when using WASD without holding RMB.
+	#
+	# When holding RMB, the body is rotated directly via mouse input in _unhandled_input.
 	
 	# Apply velocity
 	var target_velocity := direction * walk_speed if direction else Vector3.ZERO
@@ -127,6 +156,10 @@ func _physics_process(delta: float) -> void:
 func _process_combat(delta: float) -> void:
 	auto_attack_timer = max(auto_attack_timer - delta, 0)
 	ability_1_timer = max(ability_1_timer - delta, 0)
+	mana_regen_lock_timer = max(mana_regen_lock_timer - delta, 0)
+	
+	# Mana regeneration (WoW Classic style - 5 second rule)
+	_process_mana_regen(delta)
 	
 	# Auto-attack when we have a valid target
 	if current_target and is_instance_valid(current_target) and auto_attack_timer <= 0:
@@ -144,9 +177,8 @@ func _perform_auto_attack() -> void:
 	if bug:
 		var damage := 8.0 + randf_range(-1.5, 1.5)
 		bug.take_damage(damage)
+		play_simple_attack_animation()
 		auto_attack_timer = auto_attack_cooldown
-	
-	# TODO: Add swing animation / sound later
 
 
 func _use_ability_1() -> void:
@@ -155,13 +187,19 @@ func _use_ability_1() -> void:
 	
 	var dist := global_position.distance_to(current_target.global_position)
 	if dist > auto_attack_range * 1.3:
-		return   # too far
+		return
 	
 	var bug := current_target as CorruptedBug
 	if bug:
 		bug.take_damage(ability_1_damage)
+		play_simple_attack_animation()
 		ability_1_timer = ability_1_cooldown
 		print("Used Ability 1 for ", ability_1_damage, " damage!")
+
+func get_ability_1_cooldown_percent() -> float:
+	if ability_1_cooldown <= 0:
+		return 0.0
+	return clamp(ability_1_timer / ability_1_cooldown, 0.0, 1.0)
 
 
 func _try_target_under_mouse() -> void:
@@ -243,3 +281,89 @@ func clear_target() -> void:
 func _on_enemy_died(enemy: Node) -> void:
 	if current_target == enemy:
 		clear_target()
+
+
+func _process_mana_regen(delta: float) -> void:
+	if current_resource >= max_resource:
+		return
+	
+	var regen_rate := 2.0   # base regen per second
+	
+	# WoW Classic 5-second rule: much slower regen while locked
+	if mana_regen_lock_timer > 0:
+		regen_rate = 0.4
+	
+	current_resource = min(current_resource + regen_rate * delta, max_resource)
+	resource_changed.emit(current_resource, max_resource, resource_name)
+
+
+# === Health & Resource System (WoW Classic style) ===
+
+
+func take_damage(amount: float) -> void:
+	if current_health <= 0:
+		return
+	
+	current_health = max(current_health - amount, 0)
+	health_changed.emit(current_health, max_health)
+	
+	# Show floating damage above player
+	_spawn_floating_text(amount)
+	
+	if current_health <= 0:
+		die()
+
+
+func heal(amount: float) -> void:
+	current_health = min(current_health + amount, max_health)
+	health_changed.emit(current_health, max_health)
+
+
+func use_resource(amount: float) -> bool:
+	if current_resource < amount:
+		return false
+	
+	current_resource -= amount
+	resource_changed.emit(current_resource, max_resource, resource_name)
+	return true
+
+
+func restore_resource(amount: float) -> void:
+	current_resource = min(current_resource + amount, max_resource)
+	resource_changed.emit(current_resource, max_resource, resource_name)
+
+
+func die() -> void:
+	print("You died!")
+	# For now just respawn with full health
+	current_health = max_health
+	current_resource = max_resource
+	health_changed.emit(current_health, max_health)
+	resource_changed.emit(current_resource, max_resource, resource_name)
+
+
+func play_simple_attack_animation() -> void:
+	"""Very basic arm swing so the player can see when the attack will land."""
+	if not right_arm:
+		return
+	
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	
+	# Swing forward
+	tween.tween_property(right_arm, "rotation_degrees:x", -55.0, 0.12)
+	# Swing back
+	tween.tween_property(right_arm, "rotation_degrees:x", 25.0, 0.25)
+	# Return to rest
+	tween.tween_property(right_arm, "rotation_degrees:x", 0.0, 0.15)
+
+
+func _spawn_floating_text(amount: float) -> void:
+	var text_scene := preload("res://scenes/ui/FloatingCombatText.tscn")
+	var text_instance := text_scene.instantiate() as Node3D
+	text_instance.position = Vector3(global_position.x, global_position.y + 2.3, global_position.z)
+	get_tree().current_scene.add_child(text_instance)
+	
+	if text_instance.has_method("setup"):
+		text_instance.setup(amount, false)

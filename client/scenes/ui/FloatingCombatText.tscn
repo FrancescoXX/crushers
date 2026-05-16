@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://do5erfql5b1dc"]
+
+[ext_resource type="Script" path="res://scripts/ui/floating_combat_text.gd" id="1_fct"]
+
+[node name="FloatingCombatText" type="Node3D"]
+script = ExtResource("1_fct")
+
+[node name="Label3D" type="Label3D" parent="."]
+billboard = 1
+text = "8"
+font_size = 28
+outline_size = 4
+modulate = Color(1, 0.35, 0.2, 1)

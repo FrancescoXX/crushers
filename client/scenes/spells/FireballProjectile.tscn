@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://fireball001"]
+
+[ext_resource type="Script" path="res://scripts/spells/fireball_projectile.gd" id="1_fireball_script"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+radius = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_Fireball"]
+albedo_color = Color(1, 0.5, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.6, 0.2, 1)
+emission_energy_multiplier = 3.5
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 0.3
+
+[node name="FireballProjectile" type="Area3D"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_fireball_script")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_1")
+material_override = SubResource("Material_Fireball")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 2.5
+omni_range = 4.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_1")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 4.0
+one_shot = true
+autostart = true
