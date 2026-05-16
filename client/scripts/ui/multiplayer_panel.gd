@@ -109,7 +109,8 @@ func _on_peer_left(peer_id: int) -> void:
 
 
 func _on_multiplayer_stopped() -> void:
-	status_label.text = "Offline"
+	if not network_manager or not network_manager.has_active_peer():
+		status_label.text = "Offline"
 	_update_buttons()
 
 
@@ -118,3 +119,9 @@ func _update_buttons() -> void:
 	host_button.disabled = connected
 	join_button.disabled = connected
 	leave_button.disabled = not connected
+	
+	if connected and status_label.text == "Offline":
+		if multiplayer.is_server():
+			status_label.text = "Hosting on port %d" % int(port_spin.value)
+		else:
+			status_label.text = "Connected as peer %d" % multiplayer.get_unique_id()

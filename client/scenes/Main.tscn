@@ -4,12 +4,12 @@
 [ext_resource type="PackedScene" uid="uid://dgitkc8wffq3m" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://bcb2by87bmuhc" path="res://scenes/ui/TargetFrame.tscn" id="2_targetframe"]
 [ext_resource type="Script" uid="uid://3hos2ioqud44" path="res://scripts/main.gd" id="3_main"]
-[ext_resource type="PackedScene" uid="uid://debrpulixbqhk" path="res://scenes/ui/PlayerFrame.tscn" id="3_playerframe"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PlayerFrame.tscn" id="3_playerframe"]
 [ext_resource type="PackedScene" uid="uid://ctionbar001" path="res://scenes/ui/ActionBar.tscn" id="4_actionbar"]
 [ext_resource type="PackedScene" path="res://scenes/ui/InventoryPanel.tscn" id="5_inventory"]
 [ext_resource type="PackedScene" path="res://scenes/ui/LevelDisplay.tscn" id="6_level"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ExperienceBar.tscn" id="7_exp_bar"]
-[ext_resource type="PackedScene" path="res://scenes/ui/LootWindow.tscn" id="8_loot_window"]
+[ext_resource type="PackedScene" uid="uid://lootwindow" path="res://scenes/ui/LootWindow.tscn" id="8_loot_window"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MultiplayerPanel.tscn" id="9_multiplayer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial_001"]
@@ -140,6 +140,7 @@ offset_bottom = -120.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="LootWindow" parent="CanvasLayer" instance=ExtResource("8_loot_window")]
+[node name="LootWindow" parent="CanvasLayer" unique_id=2034591622 instance=ExtResource("8_loot_window")]
 
-[node name="MultiplayerPanel" parent="CanvasLayer" instance=ExtResource("9_multiplayer")]
+[node name="MultiplayerPanel" parent="CanvasLayer" unique_id=281328781 instance=ExtResource("9_multiplayer")]
+layout_mode = 3

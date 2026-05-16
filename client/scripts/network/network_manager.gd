@@ -27,7 +27,7 @@ func _ready() -> void:
 
 
 func host_game(port: int = DEFAULT_PORT) -> int:
-	stop_multiplayer()
+	_close_peer()
 	
 	peer = ENetMultiplayerPeer.new()
 	var error: int = peer.create_server(port, MAX_CLIENTS)
@@ -44,7 +44,7 @@ func host_game(port: int = DEFAULT_PORT) -> int:
 
 
 func join_game(address: String = "127.0.0.1", port: int = DEFAULT_PORT) -> int:
-	stop_multiplayer()
+	_close_peer()
 	
 	peer = ENetMultiplayerPeer.new()
 	var error: int = peer.create_client(address, port)
