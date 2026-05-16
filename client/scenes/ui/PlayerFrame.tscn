@@ -2,49 +2,41 @@
 
 [ext_resource type="Script" path="res://scripts/ui/player_frame.gd" id="1_playerframe"]
 
-[sub_resource type="StyleBoxFlat" id="HealthFill"]
-bg_color = Color(0.85, 0.15, 0.1, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.3, 0.05, 0.05, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="ResourceFill"]
-bg_color = Color(0.25, 0.45, 0.95, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.1, 0.2, 0.4, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="Background"]
-bg_color = Color(0.06, 0.05, 0.08, 0.9)
+[sub_resource type="StyleBoxFlat" id="Frame"]
+bg_color = Color(0.035, 0.028, 0.024, 0.92)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.2, 0.18, 0.25, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+border_color = Color(0.58, 0.44, 0.24, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="HealthFill"]
+bg_color = Color(0.62, 0.04, 0.035, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.015, 0.012, 1)
+
+[sub_resource type="StyleBoxFlat" id="ResourceFill"]
+bg_color = Color(0.03, 0.22, 0.76, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.015, 0.07, 0.22, 1)
 
 [node name="PlayerFrame" type="Control"]
 layout_mode = 3
 anchors_preset = 0
 offset_left = 20.0
-offset_top = 20.0
-offset_right = 240.0
-offset_bottom = 135.0
+offset_top = 18.0
+offset_right = 350.0
+offset_bottom = 130.0
 script = ExtResource("1_playerframe")
 
 [node name="Background" type="Panel" parent="."]
@@ -54,51 +46,102 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("Background")
+theme_override_styles/panel = SubResource("Frame")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="Portrait" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 10.0
+offset_top = -43.0
+offset_right = 96.0
+offset_bottom = 43.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("Frame")
+
+[node name="PortraitTint" type="ColorRect" parent="Portrait"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 8.0
-offset_right = -10.0
-offset_bottom = -8.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 5
+color = Color(0.13, 0.18, 0.24, 1)
 
-[node name="NameLabel" type="Label" parent="VBoxContainer"]
-layout_mode = 2
+[node name="Bars" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 108.0
+offset_top = 9.0
+offset_right = -12.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NameLabel" type="Label" parent="Bars"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 25.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.42, 1)
 text = "You"
-font_size = 17
+font_size = 20
 text_overrun_behavior = 0
 
-[node name="HealthBar" type="ProgressBar" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 18)
-layout_mode = 2
+[node name="HealthBar" type="ProgressBar" parent="Bars"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 33.0
+offset_bottom = 59.0
+grow_horizontal = 2
 theme_override_styles/fill = SubResource("HealthFill")
 max_value = 120.0
 value = 120.0
 show_percentage = false
 
-[node name="HealthValue" type="Label" parent="VBoxContainer"]
-layout_mode = 2
+[node name="HealthValue" type="Label" parent="Bars/HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.78, 1)
 text = "120 / 120"
-font_size = 13
+font_size = 15
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="ResourceBar" type="ProgressBar" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 16)
-layout_mode = 2
+[node name="ResourceBar" type="ProgressBar" parent="Bars"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 64.0
+offset_bottom = 88.0
+grow_horizontal = 2
 theme_override_styles/fill = SubResource("ResourceFill")
 max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="ResourceValue" type="Label" parent="VBoxContainer"]
-layout_mode = 2
+[node name="ResourceValue" type="Label" parent="Bars/ResourceBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.78, 1)
 text = "100 / 100"
-font_size = 13
+font_size = 15
 horizontal_alignment = 1
+vertical_alignment = 1

@@ -110,21 +110,24 @@ func _create_target_circle() -> void:
 	target_circle.name = "TargetCircle"
 	add_child(target_circle)
 	
-	var plane = PlaneMesh.new()
-	plane.size = Vector2(2.2, 2.2)
-	target_circle.mesh = plane
+	var ring := TorusMesh.new()
+	ring.inner_radius = 1.05
+	ring.outer_radius = 1.14
+	ring.rings = 8
+	ring.ring_segments = 96
+	target_circle.mesh = ring
 	
-	# Rotate so it lies flat on the ground
-	target_circle.rotation_degrees.x = -90
-	target_circle.position.y = 0.05  # slightly above ground
+	# Rotate so the ring lies flat on the ground.
+	target_circle.rotation_degrees.x = 90
+	target_circle.position.y = 0.08
 	
 	var mat = StandardMaterial3D.new()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1.0, 0.85, 0.3, 0.75)  # Yellow (neutral)
+	mat.albedo_color = Color(1.0, 0.82, 0.22, 0.86)  # Yellow (neutral)
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.85, 0.3, 0.6)
-	mat.emission_energy_multiplier = 1.2
+	mat.emission = Color(1.0, 0.76, 0.18, 1.0)
+	mat.emission_energy_multiplier = 1.8
 	
 	target_circle.material_override = mat
 	target_circle.visible = false  # Hidden by default
@@ -262,6 +265,33 @@ func _generate_loot() -> void:
 			"quality": "common",
 		},
 	]
+
+
+func get_loot_items() -> Array[Dictionary]:
+	return loot_items
+
+
+func clear_loot_items() -> void:
+	loot_items.clear()
+
+
+func fade_away_after_loot() -> void:
+	collision_layer = 0
+	collision_mask = 0
+	
+	var tween := create_tween()
+	tween.set_parallel(true)
+	for child in get_children():
+		if child is MeshInstance3D:
+			var mat := child.material_override as StandardMaterial3D
+			if mat:
+				mat = mat.duplicate()
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				child.material_override = mat
+				tween.tween_property(mat, "albedo_color", Color(mat.albedo_color.r, mat.albedo_color.g, mat.albedo_color.b, 0.0), 1.4)
+			tween.tween_property(child, "position:y", child.position.y - 0.25, 1.4)
+	
+	tween.finished.connect(queue_free)
 
 
 func _turn_into_corpse() -> void:

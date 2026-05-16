@@ -14,7 +14,7 @@ func _ready() -> void:
 		
 		# Set initial level
 		if "level" in player:
-			level_label.text = "Level %d" % player.level
+			level_label.text = str(player.level)
 
 func _on_level_up(new_level: int) -> void:
-	level_label.text = "Level %d" % new_level
+	level_label.text = str(new_level)

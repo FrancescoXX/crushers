@@ -2,6 +2,7 @@ extends Control
 
 @onready var name_label: Label = $NameLabel
 @onready var health_bar: ProgressBar = $HealthBar
+@onready var health_value: Label = $HealthBar/HealthValue
 
 var current_target: Node3D = null
 
@@ -55,3 +56,4 @@ func _update_health(current: float = -1, maximum: float = -1) -> void:
 	
 	health_bar.max_value = maxv
 	health_bar.value = cur
+	health_value.text = "%d / %d" % [cur, maxv]

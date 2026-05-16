@@ -28,8 +28,8 @@ layout_mode = 3
 anchors_preset = 0
 offset_left = 420.0
 offset_top = 260.0
-offset_right = 700.0
-offset_bottom = 430.0
+offset_right = 780.0
+offset_bottom = 480.0
 script = ExtResource("1_loot")
 
 [node name="Panel" type="Panel" parent="."]
@@ -52,7 +52,7 @@ offset_bottom = 34.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.42, 1)
 text = "Corpse"
-font_size = 16
+font_size = 20
 
 [node name="CloseButton" type="Button" parent="Panel"]
 layout_mode = 1
@@ -73,7 +73,7 @@ anchor_right = 1.0
 offset_left = 12.0
 offset_top = 48.0
 offset_right = -12.0
-offset_bottom = 88.0
+offset_bottom = 96.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_Item")
 
@@ -100,16 +100,16 @@ offset_bottom = 80.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.95, 0.72, 0.22, 1)
 text = "42 Gold"
-font_size = 14
+font_size = 17
 
 [node name="ItemPanel" type="Panel" parent="Panel"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 12.0
-offset_top = 94.0
+offset_top = 106.0
 offset_right = -12.0
-offset_bottom = 134.0
+offset_bottom = 154.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_Item")
 
@@ -130,13 +130,13 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 62.0
-offset_top = 102.0
+offset_top = 118.0
 offset_right = -18.0
-offset_bottom = 126.0
+offset_bottom = 146.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.86, 0.86, 0.86, 1)
 text = "Cracked Data Fragment"
-font_size = 14
+font_size = 17
 
 [node name="LootButton" type="Button" parent="Panel"]
 layout_mode = 1

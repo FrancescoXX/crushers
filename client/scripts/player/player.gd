@@ -25,6 +25,9 @@ extends CharacterBody3D
 @export var auto_attack_range: float = 4.5
 @export var auto_attack_cooldown: float = 2.1
 @export var ability_1_cooldown: float = 6.5
+@export var heal_amount: float = 35.0
+@export var heal_mana_cost: float = 25.0
+@export var heal_cooldown: float = 4.0
 @export var loot_interact_range: float = 5.5
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
@@ -37,6 +40,7 @@ var right_mouse_held: bool = false
 var current_target: Node3D = null
 var auto_attack_timer: float = 0.0
 var ability_1_timer: float = 0.0
+var heal_timer: float = 0.0
 
 var is_charging: bool = false
 var charge_target: Node3D = null
@@ -113,6 +117,10 @@ func _input(event: InputEvent) -> void:
 	# === Ability 1 (key 1) ===
 	if event is InputEventKey and event.pressed and event.keycode == KEY_1:
 		_use_ability_1()
+	
+	# === Heal (key 2) ===
+	if event is InputEventKey and event.pressed and event.keycode == KEY_2:
+		_use_heal()
 
 	# === Autorun toggle (Num Lock like WoW) ===
 	if event is InputEventKey and event.pressed and event.keycode == KEY_NUMLOCK:
@@ -198,6 +206,7 @@ func _physics_process(delta: float) -> void:
 func _process_combat(delta: float) -> void:
 	auto_attack_timer = max(auto_attack_timer - delta, 0)
 	ability_1_timer = max(ability_1_timer - delta, 0)
+	heal_timer = max(heal_timer - delta, 0)
 	mana_regen_lock_timer = max(mana_regen_lock_timer - delta, 0)
 	
 	# Mana regeneration (WoW Classic style - 5 second rule)
@@ -260,6 +269,28 @@ func is_charge_in_range() -> bool:
 	if not current_target or not is_instance_valid(current_target):
 		return false
 	return global_position.distance_to(current_target.global_position) <= charge_max_range
+
+
+func _use_heal() -> void:
+	if heal_timer > 0 or current_health >= max_health:
+		return
+	
+	if not use_resource(heal_mana_cost):
+		return
+	
+	mana_regen_lock_timer = MANA_REGEN_LOCK_DURATION
+	heal(heal_amount)
+	heal_timer = heal_cooldown
+
+
+func get_heal_cooldown_percent() -> float:
+	if heal_cooldown <= 0:
+		return 0.0
+	return clamp(heal_timer / heal_cooldown, 0.0, 1.0)
+
+
+func can_use_heal() -> bool:
+	return heal_timer <= 0 and current_health < max_health and current_resource >= heal_mana_cost
 
 
 # === Experience System ===

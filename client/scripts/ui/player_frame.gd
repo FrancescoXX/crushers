@@ -1,10 +1,10 @@
 extends Control
 
-@onready var name_label: Label = $VBoxContainer/NameLabel
-@onready var health_bar: ProgressBar = $VBoxContainer/HealthBar
-@onready var health_value: Label = $VBoxContainer/HealthValue
-@onready var resource_bar: ProgressBar = $VBoxContainer/ResourceBar
-@onready var resource_value: Label = $VBoxContainer/ResourceValue
+@onready var name_label: Label = $Bars/NameLabel
+@onready var health_bar: ProgressBar = $Bars/HealthBar
+@onready var health_value: Label = $Bars/HealthBar/HealthValue
+@onready var resource_bar: ProgressBar = $Bars/ResourceBar
+@onready var resource_value: Label = $Bars/ResourceBar/ResourceValue
 
 var player: Node3D = null
 

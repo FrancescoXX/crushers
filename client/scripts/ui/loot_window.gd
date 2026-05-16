@@ -26,8 +26,8 @@ func open(corpse = null, screen_position := Vector2.ZERO) -> void:
 			name_label.text = "Corpse"
 	
 	var loot_items: Array = []
-	if corpse and "loot_items" in corpse:
-		loot_items = corpse.loot_items
+	if corpse and corpse.has_method("get_loot_items"):
+		loot_items = corpse.get_loot_items()
 	
 	_set_loot_row("Gold", loot_items[0] if loot_items.size() > 0 else {})
 	_set_loot_row("Item", loot_items[1] if loot_items.size() > 1 else {})
@@ -72,7 +72,14 @@ func _set_loot_row(row_name: String, item: Dictionary) -> void:
 
 func _on_loot_pressed() -> void:
 	if current_corpse:
-		print("Looting: ", current_corpse.name)
+		var inventory := get_tree().current_scene.get_node_or_null("CanvasLayer/InventoryPanel")
+		if inventory and inventory.has_method("add_items") and current_corpse.has_method("get_loot_items"):
+			if inventory.add_items(current_corpse.get_loot_items()):
+				if current_corpse.has_method("clear_loot_items"):
+					current_corpse.clear_loot_items()
+				if current_corpse.has_method("fade_away_after_loot"):
+					current_corpse.fade_away_after_loot()
+				print("Looting: ", current_corpse.name)
 	close()
 
 
