@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/LevelDisplay.tscn" id="6_level"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ExperienceBar.tscn" id="7_exp_bar"]
 [ext_resource type="PackedScene" path="res://scenes/ui/LootWindow.tscn" id="8_loot_window"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MultiplayerPanel.tscn" id="9_multiplayer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial_001"]
 sky_horizon_color = Color(0.04, 0.025, 0.1, 1)
@@ -140,3 +141,5 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="LootWindow" parent="CanvasLayer" instance=ExtResource("8_loot_window")]
+
+[node name="MultiplayerPanel" parent="CanvasLayer" instance=ExtResource("9_multiplayer")]
