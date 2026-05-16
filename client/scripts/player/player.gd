@@ -7,7 +7,7 @@ extends CharacterBody3D
 @export var walk_speed: float = 7.0
 @export var acceleration: float = 24.0
 @export var deceleration: float = 28.0
-@export var jump_velocity: float = 11.5  # Adjusted for higher gravity (more grounded feel)
+@export var jump_velocity: float = 17.0  # A bit higher jump force
 @export var turn_speed: float = 14.0
 # turn_speed_free_mouse was removed - we no longer auto-rotate the body when mouse is free
 # to prevent UI flickering. Character now strafes in free-mouse mode.
@@ -29,7 +29,7 @@ extends CharacterBody3D
 @onready var spring_arm: SpringArm3D = $SpringArm3D
 @onready var right_arm: MeshInstance3D = $Visual/RightArm
 
-var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+@export var gravity: float = 75.0    # A bit less gravity
 var right_mouse_held: bool = false
 
 # Combat & Targeting
@@ -55,6 +55,15 @@ const MANA_REGEN_LOCK_DURATION: float = 5.0
 signal health_changed(current: float, maximum: float)
 signal resource_changed(current: float, maximum: float, resource_name: String)
 
+# === Experience System ===
+@export_group("Experience")
+@export var level: int = 1
+@export var xp: int = 0
+@export var xp_to_next_level: int = 1  # Kill 1 monster to reach level 2 (for quick testing)
+
+signal level_up(new_level: int)
+signal xp_changed(current: int, needed: int)
+
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -68,8 +77,7 @@ func _ready() -> void:
 	health_changed.emit(current_health, max_health)
 	resource_changed.emit(current_resource, max_resource, resource_name)
 	
-	# Make gravity feel more realistic and grounded (default is too floaty)
-	ProjectSettings.set_setting("physics/3d/default_gravity", 24.0)
+	# Gravity is now controlled by the exported variable above (easier to tweak)
 
 
 func _input(event: InputEvent) -> void:
@@ -200,6 +208,38 @@ func get_ability_1_cooldown_percent() -> float:
 	if ability_1_cooldown <= 0:
 		return 0.0
 	return clamp(ability_1_timer / ability_1_cooldown, 0.0, 1.0)
+
+
+# === Experience System ===
+func gain_xp(amount: int) -> void:
+	xp += amount
+	xp_changed.emit(xp, xp_to_next_level)
+	
+	print("Gained %d XP! (%d/%d)" % [amount, xp, xp_to_next_level])
+	
+	if xp >= xp_to_next_level:
+		level_up_player()
+
+func level_up_player() -> void:
+	level += 1
+	xp -= xp_to_next_level
+	
+	# Set next level requirement (simple scaling)
+	if level == 2:
+		xp_to_next_level = 2
+	else:
+		xp_to_next_level = int(xp_to_next_level * 1.5)
+	
+	level_up.emit(level)
+	xp_changed.emit(xp, xp_to_next_level)
+	
+	print("Level Up! You are now Level %d" % level)
+	
+	# Restore some health/mana on level up (nice QoL)
+	current_health = max_health
+	current_resource = max_resource
+	health_changed.emit(current_health, max_health)
+	resource_changed.emit(current_resource, max_resource, resource_name)
 
 
 func _try_target_under_mouse() -> void:

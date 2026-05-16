@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://level_display"]
+
+[ext_resource type="Script" path="res://scripts/ui/level_display.gd" id="1_level"]
+
+[node name="LevelDisplay" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 120.0
+offset_bottom = 40.0
+script = ExtResource("1_level")
+
+[node name="LevelLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 115.0
+offset_bottom = 35.0
+text = "Level 1"
+font_size = 18
+vertical_alignment = 1

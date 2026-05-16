@@ -5,6 +5,9 @@
 [ext_resource type="PackedScene" uid="uid://targetframe001" path="res://scenes/ui/TargetFrame.tscn" id="2_targetframe"]
 [ext_resource type="PackedScene" uid="uid://playerframe001" path="res://scenes/ui/PlayerFrame.tscn" id="3_playerframe"]
 [ext_resource type="PackedScene" uid="uid://actionbar001" path="res://scenes/ui/ActionBar.tscn" id="4_actionbar"]
+[ext_resource type="PackedScene" uid="uid://inventory_panel" path="res://scenes/ui/InventoryPanel.tscn" id="5_inventory"]
+[ext_resource type="PackedScene" uid="uid://level_display" path="res://scenes/ui/LevelDisplay.tscn" id="6_level"]
+[ext_resource type="PackedScene" uid="uid://exp_bar" path="res://scenes/ui/ExperienceBar.tscn" id="7_exp_bar"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="3_main"]
 
@@ -113,5 +116,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.8, -5)
 [node name="PlayerFrame" parent="CanvasLayer" instance=ExtResource("3_playerframe")]
 
 [node name="ActionBar" parent="CanvasLayer" instance=ExtResource("4_actionbar")]
+
+[node name="InventoryPanel" parent="CanvasLayer" instance=ExtResource("5_inventory")]
+
+[node name="LevelDisplay" parent="CanvasLayer" instance=ExtResource("6_level")]
+offset_left = 20.0
+offset_top = 70.0
+offset_right = 140.0
+offset_bottom = 105.0
+
+[node name="ExperienceBar" parent="CanvasLayer" instance=ExtResource("7_exp_bar")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = -75.0
+grow_horizontal = 2
+grow_vertical = 0
 
 

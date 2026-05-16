@@ -29,6 +29,8 @@ var attack_timer: float = 0.0
 @onready var core: MeshInstance3D = $Core
 @onready var light: OmniLight3D = $OmniLight3D
 
+var target_circle: MeshInstance3D
+
 # Store base colors
 var neutral_body_emission := Color(0.95, 0.55, 0.1, 1)      # Orange/Yellow
 var neutral_head_emission := Color(0.9, 0.85, 0.3, 1)       # Yellowish
@@ -41,6 +43,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	_make_materials_unique()
 	_set_neutral_visuals()
+	_create_target_circle()
 
 
 func _process(delta: float) -> void:
@@ -80,6 +83,14 @@ func become_aggroed() -> void:
 	
 	is_aggroed = true
 	_set_aggressive_visuals()
+	
+	# Change target circle to red when aggressive (WoW Classic style)
+	if target_circle and target_circle.material_override:
+		var mat = target_circle.material_override as StandardMaterial3D
+		if mat:
+			mat.albedo_color = Color(1.0, 0.3, 0.2, 0.8)
+			mat.emission = Color(1.0, 0.3, 0.2, 0.7)
+	
 	print(display_name, " has become aggressive!")
 
 
@@ -91,6 +102,30 @@ func _make_materials_unique() -> void:
 		head.material_override = head.material_override.duplicate()
 	if core and core.material_override:
 		core.material_override = core.material_override.duplicate()
+
+func _create_target_circle() -> void:
+	target_circle = MeshInstance3D.new()
+	target_circle.name = "TargetCircle"
+	add_child(target_circle)
+	
+	var plane = PlaneMesh.new()
+	plane.size = Vector2(2.2, 2.2)
+	target_circle.mesh = plane
+	
+	# Rotate so it lies flat on the ground
+	target_circle.rotation_degrees.x = -90
+	target_circle.position.y = 0.05  # slightly above ground
+	
+	var mat = StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.85, 0.3, 0.75)  # Yellow (neutral)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.85, 0.3, 0.6)
+	mat.emission_energy_multiplier = 1.2
+	
+	target_circle.material_override = mat
+	target_circle.visible = false  # Hidden by default
 
 
 func _set_neutral_visuals() -> void:
@@ -172,12 +207,20 @@ func set_targeted(targeted: bool) -> void:
 	is_targeted = targeted
 	target_state_changed.emit(targeted)
 	
+	if target_circle:
+		target_circle.visible = targeted
+	
 	if light:
 		light.light_energy = 2.0 if targeted else (1.6 if is_aggroed else 1.1)
 
 
 func die() -> void:
 	died.emit()
+	
+	# Give XP to the player when the monster dies
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("gain_xp"):
+		player.gain_xp(1)
 	
 	if mesh_instance:
 		mesh_instance.visible = false
