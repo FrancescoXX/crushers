@@ -29,9 +29,11 @@ extends CharacterBody3D
 @export var heal_mana_cost: float = 25.0
 @export var heal_cooldown: float = 4.0
 @export var loot_interact_range: float = 5.5
+@export var is_remote_player: bool = false
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
 @onready var right_arm: MeshInstance3D = $Visual/RightArm
+@onready var camera: Camera3D = $SpringArm3D/Camera3D
 
 @export var gravity: float = 75.0    # A bit less gravity
 var right_mouse_held: bool = false
@@ -76,10 +78,18 @@ signal xp_changed(current: int, needed: int)
 
 
 func _ready() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if not is_remote_player:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	spring_arm.spring_length = 6.8
 	
-	add_to_group("player")
+	if is_remote_player:
+		add_to_group("remote_players")
+		collision_layer = 0
+		collision_mask = 0
+		if camera:
+			camera.current = false
+	else:
+		add_to_group("player")
 	
 	# Initialize health and resource (WoW style)
 	current_health = max_health
@@ -91,6 +101,9 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if is_remote_player:
+		return
+	
 	# === Right Mouse Button (WoW Classic style) ===
 	# Hold Right Mouse Button to look around and turn your character
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
@@ -129,6 +142,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_remote_player:
+		return
+	
 	# Only rotate camera + turn character when holding Right Mouse Button (WoW Classic)
 	if event is InputEventMouseMotion and right_mouse_held:
 		rotate_y(-event.relative.x * mouse_sensitivity)
@@ -138,6 +154,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_remote_player:
+		return
+	
 	# Gravity
 	if not is_on_floor():
 		velocity.y -= gravity * delta
@@ -204,6 +223,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _process_combat(delta: float) -> void:
+	if is_remote_player:
+		return
+	
 	auto_attack_timer = max(auto_attack_timer - delta, 0)
 	ability_1_timer = max(ability_1_timer - delta, 0)
 	heal_timer = max(heal_timer - delta, 0)
