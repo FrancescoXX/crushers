@@ -1,0 +1,41 @@
+# Godot 4
+client/.godot/
+client/export_presets.cfg
+*.import
+*.translation
+
+# Exported builds
+*.exe
+*.pck
+*.zip
+export/
+*.app
+*.dmg
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Large binary assets (use Git LFS when we add real models)
+*.glb
+*.gltf
+*.fbx
+*.blend
+*.png
+*.jpg
+*.jpeg
+*.hdr
+*.exr
+
+# Temporary / cache
+*.tmp
+*.log
+crash_handler
