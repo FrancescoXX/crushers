@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://inventory_panel" path="res://scenes/ui/InventoryPanel.tscn" id="5_inventory"]
 [ext_resource type="PackedScene" uid="uid://level_display" path="res://scenes/ui/LevelDisplay.tscn" id="6_level"]
 [ext_resource type="PackedScene" uid="uid://exp_bar" path="res://scenes/ui/ExperienceBar.tscn" id="7_exp_bar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/LootWindow.tscn" id="8_loot_window"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="3_main"]
 
@@ -139,3 +140,4 @@ grow_horizontal = 2
 grow_vertical = 0
 
 
+[node name="LootWindow" parent="CanvasLayer" instance=ExtResource("8_loot_window")]

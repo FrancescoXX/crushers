@@ -22,7 +22,9 @@ signal target_state_changed(is_targeted: bool)
 var current_health: float = max_health
 var is_targeted: bool = false
 var is_aggroed: bool = false
+var is_dead: bool = false
 var attack_timer: float = 0.0
+var loot_items: Array[Dictionary] = []
 
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 @onready var head: MeshInstance3D = $Head
@@ -47,7 +49,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not is_aggroed:
+	if is_dead or not is_aggroed:
 		return
 	
 	attack_timer -= delta
@@ -58,7 +60,7 @@ func _process(delta: float) -> void:
 
 
 func take_damage(amount: float) -> void:
-	if current_health <= 0:
+	if is_dead or current_health <= 0:
 		return
 	
 	current_health = max(current_health - amount, 0)
@@ -78,7 +80,7 @@ func take_damage(amount: float) -> void:
 
 
 func become_aggroed() -> void:
-	if is_aggroed:
+	if is_dead or is_aggroed:
 		return
 	
 	is_aggroed = true
@@ -185,6 +187,9 @@ func _flash_hit() -> void:
 
 
 func _try_attack_player() -> void:
+	if is_dead:
+		return
+	
 	var player := get_tree().get_first_node_in_group("player")
 	if not player or not is_instance_valid(player):
 		return
@@ -204,6 +209,13 @@ func _try_attack_player() -> void:
 
 
 func set_targeted(targeted: bool) -> void:
+	if is_dead:
+		is_targeted = false
+		target_state_changed.emit(false)
+		if target_circle:
+			target_circle.visible = false
+		return
+	
 	is_targeted = targeted
 	target_state_changed.emit(targeted)
 	
@@ -215,6 +227,12 @@ func set_targeted(targeted: bool) -> void:
 
 
 func die() -> void:
+	if is_dead:
+		return
+	
+	is_dead = true
+	is_aggroed = false
+	is_targeted = false
 	died.emit()
 	
 	# Give XP to the player when the monster dies
@@ -223,9 +241,46 @@ func die() -> void:
 		player.gain_xp(1)
 	
 	remove_from_group("enemies")
+	add_to_group("corpse")
+	collision_layer = 4
+	collision_mask = 0
 	
-	queue_free()
+	_generate_loot()
+	_turn_into_corpse()
+
+
+func _generate_loot() -> void:
+	loot_items = [
+		{
+			"name": "Gold",
+			"quantity": randi_range(1, 100),
+			"quality": "money",
+		},
+		{
+			"name": "Cracked Data Fragment",
+			"quantity": 1,
+			"quality": "common",
+		},
+	]
+
+
+func _turn_into_corpse() -> void:
+	var corpse_mat := StandardMaterial3D.new()
+	corpse_mat.albedo_color = Color(0.32, 0.32, 0.34, 1.0)
+	corpse_mat.emission_enabled = false
 	
+	for child in get_children():
+		if child is MeshInstance3D:
+			child.material_override = corpse_mat
+	
+	if target_circle:
+		target_circle.visible = false
+	
+	if has_node("Label3D"):
+		$Label3D.visible = false
+	
+	if light:
+		light.visible = false
 
 
 func _spawn_floating_text(amount: float) -> void:

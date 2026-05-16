@@ -25,6 +25,7 @@ extends CharacterBody3D
 @export var auto_attack_range: float = 4.5
 @export var auto_attack_cooldown: float = 2.1
 @export var ability_1_cooldown: float = 6.5
+@export var loot_interact_range: float = 5.5
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
 @onready var right_arm: MeshInstance3D = $Visual/RightArm
@@ -89,6 +90,8 @@ func _input(event: InputEvent) -> void:
 	# === Right Mouse Button (WoW Classic style) ===
 	# Hold Right Mouse Button to look around and turn your character
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.pressed and _try_open_loot_under_mouse():
+			return
 		right_mouse_held = event.pressed
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if right_mouse_held else Input.MOUSE_MODE_VISIBLE
 
@@ -201,6 +204,10 @@ func _process_combat(delta: float) -> void:
 	_process_mana_regen(delta)
 	
 	# Auto-attack when we have a valid target
+	if current_target and is_instance_valid(current_target) and "current_health" in current_target and current_target.current_health <= 0:
+		clear_target()
+		return
+	
 	if current_target and is_instance_valid(current_target) and auto_attack_timer <= 0:
 		var dist := global_position.distance_to(current_target.global_position)
 		if dist <= auto_attack_range and current_target.has_method("take_damage"):
@@ -209,6 +216,10 @@ func _process_combat(delta: float) -> void:
 
 func _perform_auto_attack() -> void:
 	if not current_target or not is_instance_valid(current_target):
+		clear_target()
+		return
+	
+	if "current_health" in current_target and current_target.current_health <= 0:
 		clear_target()
 		return
 	
@@ -366,6 +377,38 @@ func _try_target_under_mouse() -> void:
 		set_target(result.collider as Node3D)
 	else:
 		clear_target()
+
+
+func _try_open_loot_under_mouse() -> bool:
+	var camera := spring_arm.get_node("Camera3D") as Camera3D
+	if not camera:
+		return false
+	
+	var mouse_pos := get_viewport().get_mouse_position()
+	var from := camera.project_ray_origin(mouse_pos)
+	var to := from + camera.project_ray_normal(mouse_pos) * 80.0
+	
+	var space_state := get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(from, to, 4)   # layer 3 = corpses
+	query.collide_with_areas = false
+	
+	var result := space_state.intersect_ray(query)
+	if not result:
+		return false
+	
+	var corpse := result.collider as Node3D
+	if not corpse or not corpse.is_in_group("corpse"):
+		return false
+	
+	if global_position.distance_to(corpse.global_position) > loot_interact_range:
+		return false
+	
+	var loot_window := get_tree().current_scene.get_node_or_null("CanvasLayer/LootWindow")
+	if loot_window and loot_window.has_method("open"):
+		loot_window.open(corpse, mouse_pos)
+		return true
+	
+	return false
 
 
 func _cycle_target() -> void:
