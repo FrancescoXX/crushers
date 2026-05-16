@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3 uid="uid://player001crushers"]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player_script"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_001"]
+radius = 0.45
+height = 1.9
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_001"]
+radius = 0.45
+height = 1.9
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_player_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_001")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_001")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+collision_mask = 1
+spring_length = 5.0
+margin = 0.45
+
+[node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+current = true
+fov = 70.0
+near = 0.12
+far = 450.0
